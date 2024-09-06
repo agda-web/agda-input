@@ -1,6 +1,11 @@
+import fs from 'node:fs/promises'
+import path from 'node:path'
+
 import { generateEntriesFromUCD } from './ucd.js'
 import { generateEntriesFromQuail } from './quail.js'
 import { generateEntriesFromAgdaMode } from './agda-mode.js'
+
+const __dirname = import.meta.dirname
 
 /** See "agda-input-inherit" in agda-input.el.
  * @param {string} k */
@@ -14,7 +19,6 @@ function convertPrefix(k) {
   return null
 }
 
-import fs from 'node:fs/promises'
 
 /** @param {[string, ...any][]} entries */
 function sortEntries(entries) {
@@ -28,29 +32,32 @@ function sortEntries(entries) {
  * @param {[string, string | string[]][]} entries  */
 async function writeEntries(hdl, entries) {
   await hdl.appendFile('{\n')
+  let first = true
   for (let [k, v] of entries) {
     if (typeof v === 'string') v = [v]
+    // do escaping for certain characters that may not display properly
     v = Array.from(JSON.stringify(v))
       .map(s => s.replace(/\p{M}|\p{C}|\p{Z}/v, m => {
-          const p = m.codePointAt(0)
-          if (p == null) throw 0
-          const h = p.toString(16)
-          return p > 0xffff ? `\\u{${h.padStart(6, '0')}}` : `\\u${h.padStart(4, '0')}`
+          // split to UTF-16 since JS only supports \uXXXX
+          return m.split('')
+            .map(c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'))
+            .join('')
         }))
       .join('')
 
-    await hdl.appendFile(`${JSON.stringify(k)}: ${v},\n`)
+    await hdl.appendFile((first ? '' : ',\n') + `${JSON.stringify(k)}: ${v}`)
+    first = false
   }
-  await hdl.appendFile('}\n')
+  await hdl.appendFile('\n}\n')
 }
 
 async function main() {
   // [(ucd + quail) filter by agda] + agda inp
 
-  const unicodeData = await fs.readFile('../data/UnicodeData.txt', 'utf-8')
+  const unicodeData = await fs.readFile(path.join(__dirname, '../data/UnicodeData.txt'), 'utf-8')
   const unicodeEntries = generateEntriesFromUCD(unicodeData.split('\n').filter(x => x.trim()))
 
-  const quailData = await fs.readFile('../data/latin-ltx.el', 'utf-8')
+  const quailData = await fs.readFile(path.join(__dirname, '../data/latin-ltx.el'), 'utf-8')
   const quailEntries = generateEntriesFromQuail(quailData.split('\n'))
 
   /** @type {Record<string, string[]>} */
@@ -64,7 +71,7 @@ async function main() {
     obj[k].push(v)
   }
 
-  const agdaData = await fs.readFile('../data/agda-input.el', 'utf-8')
+  const agdaData = await fs.readFile(path.join(__dirname, '../data/agda-input.el'), 'utf-8')
   const agdaEntries = generateEntriesFromAgdaMode(agdaData.split('\n'))
 
   for (const [seq, vs] of agdaEntries) {
@@ -77,9 +84,10 @@ async function main() {
 
   let entries = Object.entries(obj)
   sortEntries(entries)
+  // _.unique
   entries = entries.map(([k, vs]) => [k, Array.from(new Set(vs)).sort()])
 
-  const hdl = await fs.open('../out/final.json', 'w')
+  const hdl = await fs.open(path.join(__dirname, '../out/dict.json'), 'w')
   await writeEntries(hdl, entries)
   await hdl.close()
 }
