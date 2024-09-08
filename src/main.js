@@ -7,6 +7,21 @@ import { generateEntriesFromAgdaMode } from './agda-mode.js'
 
 const __dirname = import.meta.dirname
 
+/**
+ * @template T
+ * @param {T[]} xs */
+function uniq(xs) {
+  const ret = []
+  const seen = new Set()
+  for (const x of xs) {
+    if (!seen.has(x)) {
+      ret.push(x)
+    }
+    seen.add(x)
+  }
+  return ret
+}
+
 /** See "agda-input-inherit" in agda-input.el.
  * @param {string} k */
 function convertPrefix(k) {
@@ -84,8 +99,7 @@ async function main() {
 
   let entries = Object.entries(obj)
   sortEntries(entries)
-  // _.unique
-  entries = entries.map(([k, vs]) => [k, Array.from(new Set(vs)).sort()])
+  entries = entries.map(([k, vs]) => [k, uniq(vs)])
 
   const hdl = await fs.open(path.join(__dirname, '../out/dict.json'), 'w')
   await writeEntries(hdl, entries)
