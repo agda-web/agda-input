@@ -213,9 +213,9 @@ order for the change to take effect."
 
   ;; Inequality and similar symbols.
 
-  ("leq"  . ,(agda-input-to-string-list "<≪⋘≤≦≲ ≶≺≼≾⊂⊆ ⋐⊏⊑ ⊰⊲⊴⋖⋚⋜⋞＜"))
+  ("leq"  . ,(agda-input-to-string-list "<≪⋘≤≦≲ ≶≺≼≾⊂⊆⫇⫉ ⋐⊏⊑ ⊰⊲⊴⋖⋚⋜⋞＜"))
   ("leqn" . ,(agda-input-to-string-list "≮  ≰≨≴⋦≸⊀ ⋨⊄⊈⊊  ⋢⋤ ⋪⋬   ⋠"))
-  ("geq"  . ,(agda-input-to-string-list ">≫⋙≥≧≳ ≷≻≽≿⊃⊇ ⋑⊐⊒ ⊱⊳⊵⋗⋛⋝⋟＞"))
+  ("geq"  . ,(agda-input-to-string-list ">≫⋙≥≧≳ ≷≻≽≿⊃⊇⫈⫊ ⋑⊐⊒ ⊱⊳⊵⋗⋛⋝⋟＞"))
   ("geqn" . ,(agda-input-to-string-list "≯  ≱≩≵⋧≹⊁ ⋩⊅⊉⊋  ⋣⋥ ⋫⋭   ⋡"))
 
   ("<="   . ("≤"))  (">="   . ("≥"))
@@ -230,6 +230,8 @@ order for the change to take effect."
   ("subn"  . ("⊄"))  ("supn"  . ("⊅"))
   ("sub="  . ("⊆"))  ("sup="  . ("⊇"))
   ("sub=n" . ("⊈"))  ("sup=n" . ("⊉"))
+  ("sub~"  . ("⫇"))  ("sup~"  . ("⫈"))
+  ("sub~~"  . ("⫉"))  ("sup~~"  . ("⫊"))
 
   ("squb"   . ("⊏"))  ("squp"   . ("⊐"))
   ("squb="  . ("⊑"))  ("squp="  . ("⊒"))
@@ -254,7 +256,7 @@ order for the change to take effect."
   ("glb" . ("⊓"))  ("lub" . ("⊔"))
   ("Glb" . ("⨅"))  ("Lub" . ("⨆"))
 
-  ;; Entailment etc.
+  ;; Entailment, tacks, etc.
 
   ("entails" . ,(agda-input-to-string-list "⊢⊣⊤⊥⊦⊧⊨⊩⊪⊫⊬⊭⊮⊯"))
 
@@ -264,6 +266,16 @@ order for the change to take effect."
   ("||-"  . ("⊩"))  ("||-n" . ("⊮"))
   ("||="  . ("⊫"))  ("||=n" . ("⊯"))
   ("|||-" . ("⊪"))
+
+
+  ("tack" . ,(agda-input-to-string-list "⟘⟙⟛⟝⟞⫫⫪"))
+  ("Bot"  . ("⟘")) ;; similar to Glb/Lub vs. glb/lub
+  ("Top"  . ("⟙"))
+  ("-||-" . ("⟛"))
+  ("|--"  . ("⟝"))
+  ("--|"  . ("⟞"))
+  ("bbot" . ("⫫")) ;; similar to bN for blackboard N
+  ("btop" . ("⫪"))
 
   ;; Divisibility, parallelity.
 
@@ -304,6 +316,7 @@ order for the change to take effect."
   (":"         . ,(agda-input-to-string-list "∶⦂ː꞉˸፥፦：﹕︓"))
   (","         . ,(agda-input-to-string-list "ʻ،⸲⸴⹁⹉、︐︑﹐﹑，､"))
   (";"         . ,(agda-input-to-string-list "⨾⨟⁏፤꛶；︔﹔⍮⸵;"))
+  ("++"        . ("⧺"))
   ("::"        . ("∷"))
   ("::-"       . ("∺"))
   ("-:"        . ("∹"))
@@ -330,7 +343,7 @@ order for the change to take effect."
   ("oo"  . ("⊚"))
   ("o*"  . ("⊛"))
   ("o="  . ("⊜"))
-  ("o-"  . ("⊝"))
+  ("o-"  . ,(agda-input-to-string-list "⊝⟜"))
 
   ("O+"  . ("⨁"))
   ("Ox"  . ("⨂"))
@@ -435,6 +448,7 @@ order for the change to take effect."
   ("r->" . ("↣"))
 
   ("r-o" . ("⊸"))  ("-o"  . ("⊸"))
+  ("l-o" . ("⟜"))
 
   ("dz" . ("↯"))
 
