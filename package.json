@@ -4,5 +4,12 @@
   "description": "Data source of Agda mode's input method, originally on Emacs.",
   "type": "module",
   "main": "./src/main.js",
-  "private": true
+  "scripts": {
+    "start": "node ./src/main.js"
+  },
+  "private": true,
+  "devDependencies": {
+    "@types/node": "^22.19.3",
+    "typescript": "^5.9.3"
+  }
 }
