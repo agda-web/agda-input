@@ -35,9 +35,17 @@ function convertPrefix(k) {
 }
 
 
-/** @param {[string, ...any][]} entries */
+/**
+ * @template {any[]} T
+ * @param {[string, ...T][]} entries */
 function sortEntries(entries) {
   entries.sort(([a], [b]) => {
+    let aa, bb
+    // the only edge case that natural sort is preferable
+    if ((aa = a.match(/^\((\d+)/)) &&
+        (bb = b.match(/^\((\d+)/))) {
+      return parseInt(aa[1]) - parseInt(bb[1])
+    }
     return a > b ? 1 : a == b ? 0 : -1
   })
   return entries
@@ -97,9 +105,8 @@ async function main() {
     }
   }
 
-  let entries = Object.entries(obj)
+  const entries = Object.entries(obj).map(([k, vs]) => /** @type {[string, string[]]} */([k, uniq(vs)]))
   sortEntries(entries)
-  entries = entries.map(([k, vs]) => [k, uniq(vs)])
 
   const hdl = await fs.open(path.join(__dirname, '../out/dict.json'), 'w')
   await writeEntries(hdl, entries)
