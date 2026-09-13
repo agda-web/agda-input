@@ -5,8 +5,18 @@ function capitalize(s) {
           .join(' ')
 }
 
+/** @type {(s: string) => Record<string, string>} */
+const parseLinesOfPair = s => Object.fromEntries(/** @type {[string, string][]} */(s.split('\n')
+  .map(s => s.trim())
+  .filter(s => !s.startsWith(';;'))
+  .map(s => {
+    const mat = s.match(/\(([-A-Z" ]+)\s+.\s+(\S+)\)/)
+    return /** @type {string[] | null} */(mat ? [mat[1], mat[2]].map(x => JSON.parse(x)) : null)
+  })
+  .filter(x => x != null)))
+
 // copied from latin-ltx.el with minimal modification to put in a template string
-const markMappingEntries = `
+const markMapping = parseLinesOfPair(`
     ("DOT BELOW" . "d")
     ("DOT ABOVE" . ".")
     ("OGONEK" . "k")
@@ -20,27 +30,46 @@ const markMappingEntries = `
     ("CIRCUMFLEX" . "^")
     ("DIAERESIS" . "\\"")
     ("DOUBLE ACUTE" . "H")
-    ("ACUTE" . "'")`.split('\n')
-      .map(s => s.trim())
-      .filter(s => !s.startsWith(';;'))
-      .map(s => {
-        const mat = s.match(/\(([A-Z" ]+)\s+.\s+(\S+)\)/)
-        return /** @type {string[] | null} */(mat ? [mat[1], mat[2]].map(x => JSON.parse(x)) : null)
-      })
-      .filter(x => x != null)
+    ("ACUTE" . "'")`)
 
-const markMapping = Object.fromEntries(markMappingEntries)
+const mathVariantMapping = parseLinesOfPair(`
+      ("BOLD" . "bf")
+      ("ITALIC" . "it")
+      ("BOLD ITALIC" . "bfit")
+      ("DOUBLE-STRUCK" . "bb")
+      ("SCRIPT" . "scr")
+      ("BOLD SCRIPT" . "bfscr")
+      ("FRAKTUR" . "frak")
+      ("BOLD FRAKTUR" . "bffrak")
+      ("SANS-SERIF" . "sf")
+      ("SANS-SERIF BOLD" . "bfsf")
+      ("SANS-SERIF ITALIC" . "sfit")
+      ("SANS-SERIF BOLD ITALIC" . "bfsfit")
+      ("MONOSPACE" . "tt")`)
+
+/** @type {Record<string, number>} */
+const numberNameToDigit = {
+  ZERO: 0, ONE: 1, TWO:   2, THREE: 3, FOUR: 4,
+  FIVE: 5, SIX: 6, SEVEN: 7, EIGHT: 8, NINE: 9,
+}
 
 /** @typedef UCDMatchContext
  * @property {number} code
  * @property {(s: string) => boolean} isMark
+ * @property {(s: string) => boolean} isMathVariant
  * @property {(name: string) => string | null} getCharByName */
 
 /** @typedef UCDNamePattern
  * @property {RegExp} matcher
  * @property {(ctx: UCDMatchContext, ...args: (string | undefined)[]) => string | string[] | null} keys */
 
-/** @type {UCDNamePattern[]} */
+/**
+ * @type {UCDNamePattern[]}
+ * this is the most labor-intensive part.
+ * please read `latin-ltx.el`, find the giant `latin-ltx--define-rules` section,
+ * and translate each and every unicode matching blocks, in appearing order,
+ * to a { matcher, keys } block below.
+ */
 const patterns = [
   {
     // e.g. U+01D6: LATIN SMALL LETTER U WITH DIAERESIS AND MACRON
@@ -79,7 +108,7 @@ const patterns = [
     },
   },
   {
-    // e.g. U+2096: LATIN SUBSCRIPT SMALL LETTER K -> ^k
+    // e.g. U+2096: LATIN SUBSCRIPT SMALL LETTER K -> _k
     matcher: /(.*)SU(?:B|(PER))SCRIPT (.*)/,
     keys(ctx, part0, per, part1) {
       const base = (part0 || '') + (part1 || '')
@@ -89,6 +118,16 @@ const patterns = [
         return (per ? '^' : '_') + basechar
       return null
     },
+  },
+  {
+    // e.g. U+1D66: GREEK SUBSCRIPT SMALL LETTER BETA
+    // -> \_beta
+    matcher: /^GREEK SUBSCRIPT SMALL LETTER (.+)$/,
+    keys(_ctx, c) {
+      if (!c) throw 0
+      const name = c.toLowerCase()
+      return `_\\${name}`
+    }
   },
   {
     // e.g. U+02B7: MODIFIER LETTER SMALL W -> ^w
@@ -133,7 +172,45 @@ const patterns = [
       if (name == 'PHI') return null
       return '\\var' + name.toLowerCase()
     }
-  }
+  },
+
+  // "Mathematical alphabet"
+  {
+    // e.g. U+1D400: MATHEMATICAL BOLD CAPITAL A -> \bfA
+    matcher: /^MATHEMATICAL (.+?) (?:SMALL|CAPITA(L)) (.+)$/,
+    keys(ctx, va, l, c) {
+      if (!c) throw 0
+      if (va == null || !ctx.isMathVariant(va)) throw 0
+      const name = l ? capitalize(c) : c.toLowerCase()
+      return `\\${mathVariantMapping[va]}${name}`
+    }
+  },
+  {
+    // e.g. U+1D7D1: MATHEMATICAL BOLD DIGIT THREE -> \bf3
+    matcher: /^MATHEMATICAL (.+?) DIGIT (.+)$/,
+    keys(ctx, va, num) {
+      if (!num) throw 0
+      if (va == null || !ctx.isMathVariant(va)) throw 0
+      return `\\${mathVariantMapping[va]}${numberNameToDigit[num]}`
+    }
+  },
+  {
+    matcher: /^MATHEMATICAL (.+?) ([A-Z]+) SYMBOL$/,
+    keys(ctx, va, name) {
+      if (!name) throw 0
+      // original comment: This avoids e.g. MATHEMATICAL BOLD CAPITAL <greek> SYMBOL
+      if (va == null || !ctx.isMathVariant(va)) return null
+      return `\\${mathVariantMapping[va]}var${name}`
+    }
+  },
+  {
+    matcher: /^MATHEMATICAL (.+?) (?:NABLA|PARTIAL DIFFERENTIA(L))$/,
+    keys(ctx, va, l) {
+      const basename = l ? 'partial' : 'nabla'
+      if (va == null || !ctx.isMathVariant(va)) throw 0
+      return `\\${mathVariantMapping[va]}${basename}`
+    }
+  },
 ]
 
 /** @param {string[]} lines */
@@ -165,6 +242,7 @@ export function generateEntriesFromUCD(lines, debug = false) {
         const ctx = {
           code,
           isMark: s => s in markMapping,
+          isMathVariant: s => s in mathVariantMapping,
           getCharByName: name => {
             let n = nameToCode[name]
             return n == null ? null : String.fromCodePoint(n)

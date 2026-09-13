@@ -4,7 +4,9 @@ export function generateEntriesFromQuail(lines) {
   const entries = []
   for (let line of lines) {
     // very crude way to strip comments
-    // we assume there is no ";;" in string literals
+    // we assume there is no ";;" in string literals, and single semicolon ";"
+    // is tricky so we do not bother cleaning them as long as they does not
+    // affect the result
     const commentStart = line.indexOf(';;')
     if (commentStart >= 0) {
       line = line.slice(0, commentStart)
