@@ -12,4 +12,6 @@ The data is prepared from the following sources, in order:
 | 2. | LaTeX IME in Emacs' Quail package     | [v30.1](https://github.com/emacs-mirror/emacs/blob/emacs-30.1/lisp/leim/quail/latin-ltx.el) | [latin-ltx.el](data/latin-ltx.el)
 | 3. | Agda's homebrewed translator          | [v2.8.0](https://github.com/agda/agda/blob/v2.8.0/src/data/emacs-mode/agda-input.el) | [agda-input.el](data/agda-input.el)
 
-The project aims to generate the exact entries Agda's input method matches against, making it easier to port this input method to other text editors.
+You can also source the Unicode data from Emacs source located at [`admin/unidata/UnicodeData.txt`](https://github.com/emacs-mirror/emacs/blob/emacs-30.1/admin/unidata/UnicodeData.txt).
+
+The project aims to generate the **exact** entries Agda's input method matches against, making it easier to port this input method to other text editors.
