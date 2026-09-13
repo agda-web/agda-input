@@ -14,7 +14,7 @@ export function generateEntriesFromAgdaMode(lines) {
 
   // e.g., ("~~~"  . ("≋"))
   //       ("/"          . ,(agda-input-to-string-list "／＼"))
-  const regex = /\( *("[^"]+") *\. *(\((?:"([^"]|\\")+"\s*)+\)|,\(agda-input-to-string-list *"[^"]+?" *\)) *\)/g
+  const regex = /\( *("[^"]+") *\. *(\((?:"([^"]|\\")+"\s*)+\)|,\(agda-input-to-string-list *"[^"]+?" *\)) *\)/ug
   let mat
   while (mat = regex.exec(doc)) {
     let [, k, v] = mat

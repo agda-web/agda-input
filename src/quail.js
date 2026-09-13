@@ -10,7 +10,7 @@ export function generateEntriesFromQuail(lines) {
       line = line.slice(0, commentStart)
     }
 
-    const regex = /\(("(?:[^"]|\\")+") +\?\\?([^\n])\)/g
+    const regex = /\(("(?:[^"]|\\")+") +\?\\?([^\n])\)/ug
     let mat
     while (mat = regex.exec(line)) {
       const [, k, v] = mat
