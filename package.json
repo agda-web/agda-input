@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./src/main.js",
   "scripts": {
+    "typecheck": "tsc --noEmit -p jsconfig.json",
     "start": "node ./src/main.js"
   },
   "private": true,

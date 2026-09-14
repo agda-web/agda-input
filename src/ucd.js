@@ -1,3 +1,8 @@
+/** @returns {never} */
+function impossible() {
+  throw new Error('impossible')
+}
+
 /** @param {string} s */
 function capitalize(s) {
   return s.split(' ')
@@ -76,7 +81,7 @@ const patterns = [
     // -> \"={u}
     matcher: /^LATIN (?:CAPITAL|SMAL(L)) LETTER (.) WITH (.+)(?: AND (.+))?$/,
     keys(ctx, l, c, mark1, mark2) {
-      if (!c || !mark1) throw 0
+      if (!c || !mark1) impossible()
       if (!ctx.isMark(mark1) || (mark2 && !ctx.isMark(mark2))) return null
       if (l != null) c = c.toLowerCase()
       const marks = mark2 ? `${markMapping[mark1]}\\${markMapping[mark2]}` : markMapping[mark1]
@@ -92,7 +97,7 @@ const patterns = [
     // e.g. U+0300: COMBINING GRAVE ACCENT -> \`
     matcher: /^COMBINING (.+?)(?: ACCENT)?$/,
     keys(ctx, mark) {
-      if (!mark) throw 0
+      if (!mark) impossible()
       if (!ctx.isMark(mark)) return null
       return `\\${markMapping[mark]}`
     },
@@ -101,7 +106,7 @@ const patterns = [
     // e.g. U+00AF: SPACING MACRON -> \={}
     matcher: /^(?:SPACING )?(.+?)(?: ACCENT)?$/,
     keys(ctx, mark) {
-      if (!mark) throw 0
+      if (!mark) impossible()
       if (!ctx.isMark(mark)) return null
       if (ctx.code < 128) return null
       return `\\${markMapping[mark]}{}`
@@ -124,7 +129,7 @@ const patterns = [
     // -> \_beta
     matcher: /^GREEK SUBSCRIPT SMALL LETTER (.+)$/,
     keys(_ctx, c) {
-      if (!c) throw 0
+      if (!c) impossible()
       const name = c.toLowerCase()
       return `_\\${name}`
     }
@@ -135,7 +140,7 @@ const patterns = [
     //      U+1D2F: MODIFIER LETTER CAPITAL BARRED B -> ^\Barred B
     matcher: /^MODIFIER LETTER (?:SMALL|CAPITA(L)) ([\x20-\x7f]+)$/,
     keys(_ctx, l, basename) {
-      if (!basename) throw 0
+      if (!basename) impossible()
       const name = l ? capitalize(basename) : basename.toLowerCase()
       return '^' + (name.length > 1 ? `\\${name}` : name)
     }
@@ -144,7 +149,7 @@ const patterns = [
     // e.g. U+00AE: REGISTERED SIGN -> \registered
     matcher: /^([^- ]+) SIGN$/,
     keys(ctx, name) {
-      if (!name) throw 0
+      if (!name) impossible()
       // exclude NOT SIGN
       if (ctx.code < 128 || name == 'NOT') {
         return null
@@ -156,7 +161,7 @@ const patterns = [
     // e.g. U+0391: GREEK CAPITAL LETTER ALPHA -> \Alpha
     matcher: /^GREEK (?:SMALL|CAPITA(L)) LETTER ([^- ]+)$/,
     keys(_ctx, l, c) {
-      if (!c) throw 0
+      if (!c) impossible()
       // exclude eps & phi as per spec
       if (l == null && c.match(/EPSILON|PHI/)) return null
       const name = l ? capitalize(c) : c.toLowerCase()
@@ -167,7 +172,7 @@ const patterns = [
     // e.g. U+03D0: GREEK BETA SYMBOL -> \varbeta
     matcher: /^GREEK ([^- ]+) SYMBOL$/,
     keys(_ctx, name) {
-      if (!name) throw 0
+      if (!name) impossible()
       // exclude phi as per spec
       if (name == 'PHI') return null
       return '\\var' + name.toLowerCase()
@@ -179,8 +184,8 @@ const patterns = [
     // e.g. U+1D400: MATHEMATICAL BOLD CAPITAL A -> \bfA
     matcher: /^MATHEMATICAL (.+?) (?:SMALL|CAPITA(L)) (.+)$/,
     keys(ctx, va, l, c) {
-      if (!c) throw 0
-      if (va == null || !ctx.isMathVariant(va)) throw 0
+      if (!c) impossible()
+      if (va == null || !ctx.isMathVariant(va)) impossible()
       const name = l ? capitalize(c) : c.toLowerCase()
       return `\\${mathVariantMapping[va]}${name}`
     }
@@ -189,15 +194,15 @@ const patterns = [
     // e.g. U+1D7D1: MATHEMATICAL BOLD DIGIT THREE -> \bf3
     matcher: /^MATHEMATICAL (.+?) DIGIT (.+)$/,
     keys(ctx, va, num) {
-      if (!num) throw 0
-      if (va == null || !ctx.isMathVariant(va)) throw 0
+      if (!num) impossible()
+      if (va == null || !ctx.isMathVariant(va)) impossible()
       return `\\${mathVariantMapping[va]}${numberNameToDigit[num]}`
     }
   },
   {
     matcher: /^MATHEMATICAL (.+?) ([A-Z]+) SYMBOL$/,
     keys(ctx, va, name) {
-      if (!name) throw 0
+      if (!name) impossible()
       // original comment: This avoids e.g. MATHEMATICAL BOLD CAPITAL <greek> SYMBOL
       if (va == null || !ctx.isMathVariant(va)) return null
       return `\\${mathVariantMapping[va]}var${name}`
@@ -207,7 +212,7 @@ const patterns = [
     matcher: /^MATHEMATICAL (.+?) (?:NABLA|PARTIAL DIFFERENTIA(L))$/,
     keys(ctx, va, l) {
       const basename = l ? 'partial' : 'nabla'
-      if (va == null || !ctx.isMathVariant(va)) throw 0
+      if (va == null || !ctx.isMathVariant(va)) impossible()
       return `\\${mathVariantMapping[va]}${basename}`
     }
   },
