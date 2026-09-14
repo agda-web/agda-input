@@ -205,7 +205,7 @@ const patterns = [
       if (!name) impossible()
       // original comment: This avoids e.g. MATHEMATICAL BOLD CAPITAL <greek> SYMBOL
       if (va == null || !ctx.isMathVariant(va)) return null
-      return `\\${mathVariantMapping[va]}var${name}`
+      return `\\${mathVariantMapping[va]}var${name.toLowerCase()}`
     }
   },
   {
